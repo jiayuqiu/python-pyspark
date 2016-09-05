@@ -1,0 +1,51 @@
+#coding:utf-8
+
+from pyspark import SparkContext
+from pyspark import SparkConf
+from pyspark.sql import SQLContext
+import numpy as np
+from base_func import get_nav_spark
+
+# def convert(array):
+#     array[2]=array[2]/1000000
+#     array[3]=array[3]/1000000
+#     return array
+
+def out(AIS):
+
+    AIS_list = list(AIS[1])
+    AIS_array = np.array(AIS_list)
+
+    AIS_array = [[float(x) for x in inner] for inner in AIS_array]
+
+    print AIS_array
+    return AIS_array
+
+
+if __name__ == "__main__":
+    #####################################################################
+    
+    # 设置master地址，例如：spark://192.168.1.73:7077;local为伪分布式模式
+    
+    MASTER_HOME= "local"
+    conf = SparkConf()
+    conf.setMaster(MASTER_HOME)
+    conf.setAppName("pyspark_nav") # 设置任务名称
+    #####################################################################
+    
+    # 启动spark
+    
+    sc = SparkContext(conf=conf)
+    #####################################################################
+    
+    #任务执行
+    
+    sqlContext = SQLContext(sc)
+    # 读取数据
+    testRDD = sc.textFile("/xxxx/xaa.csv").map(lambda line: line.split(","))
+    # 对RDD进行分组，对groupedData进行操作
+    testGD=testRDD.groupBy(lambda v:v[0]).map(lambda group:get_nav_spark(group)).filter(lambda groups:groups != None).saveAsTextFile('/xxxx/testSpark2')
+    print testGD
+    print 'done!'
+    #####################################################################
+    sc.stop()
